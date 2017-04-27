@@ -1,0 +1,26 @@
+ - name: add group "tomcat"
+   group: name=tomcat
+
+ - name: add user "tomcat"
+   user: name=tomcat group=tomcat home=/usr/share/tomcat createhome=no
+
+ - name: download tomcat
+   get_url: url=http://archive.apache.org/dist/tomcat/tomcat-9/v9.0.0.M15/bin/apache-tomcat-9.0.0.M15.tar.gz dest=/opt/apache-tomcat-9.0.0.M15.tar.gz
+
+ - name: extract archive
+   command: chdir=/usr/share /bin/tar xvf /opt/apache-tomcat-9.0.0.M15.tar.gz -C /opt/ creates=/opt/apache-tomcat-9.0.0.M15
+
+ - name: symlink install directory
+   file: src=/opt/apache-tomcat-9.0.0.M15 path=/usr/share/tomcat state=link
+
+ - name: change ownership of tomcat installation
+   file: path=/usr/share/tomcat/ owner=tomcat group=tomcat state=directory recurse=yes
+
+ - name: install tomcat init script
+   copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
+
+ - name: start tomcat
+   service: name=tomcat state=started enabled=yes
+
+ - name: wait for tomcat to start
+   wait_for: port=8080

@@ -1,0 +1,59 @@
+---
+  # - name: start tomcat9
+  #   shell: sudo service tomcat7 start
+  - name: start tomcat
+    service: name=tomcat state=started enabled=yes
+
+  - name: wait for tomcat to start
+    wait_for: port=8080
+
+  # - name: clone git repo
+  #   git: repo=https://github.com/henryhoo/iTrust.git dest=/home/ubuntu/iTrust-v23 version=testcases clone=yes
+
+  # - name: change file
+  #   copy: src=../../files/context.xml dest=/home/ubuntu/iTrust-v23/WebRoot/META-INF
+
+  # - name: running maven
+  #   command: chdir=/home/ubuntu/iTrust-v23/ mvn package
+
+  # - name: copy jar
+  #   command: mv /home/ubuntu/iTrust-v23/target/iTrust-23.0.0.war /home/ubuntu/tomcat9/webapps/iTrust.war
+
+  # - name: copy
+  #   copy: src=../../files/tomcat7 dest=/etc/init.d
+
+  # - name: execute service
+  #   shell: chmod +x /etc/init.d/tomcat7
+
+  # - name: add service
+  #   shell: update-rc.d tomcat7 defaults
+
+  # - name: start tomcat9
+  #   shell: sudo service tomcat7 start
+
+  # - name: set mysql environment
+  #   copy: src=../../files/my.cnf dest=/etc/mysql/
+
+  # - name: restart MySQL
+  #   command: /etc/init.d/mysql restart
+
+  - name: move files
+    copy: src=../../files/iTrust.xml dest=/var/lib/jenkins/
+
+  - name: create jobs
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 create-job 'iTrust' < /var/lib/jenkins/iTrust.xml
+
+  - name: build job
+    command: java -jar /var/lib/jenkins/jenkins-cli.jar -s http://localhost:6060 build 'iTrust'
+
+  - name: start tomcat
+    service: name=tomcat state=started enabled=yes
+
+  - name: wait for tomcat to start
+    wait_for: port=8080 timeout=60
+
+  # - name: restart tomcat9
+  #   service: name=tomcat7 state=started enabled=yes
+  #
+  # - name: wait for tomcat to start
+  #   wait_for: port=8080 timeout=60

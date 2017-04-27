@@ -1,0 +1,15 @@
+---
+- name: add java repository
+  shell: sudo su - root -c 'add-apt-repository -y ppa:webupd8team/java'
+
+- name: apt-get update
+  shell: sudo su - root -c 'apt-get update'
+
+- name: set deb conf selection 1
+  shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+
+- name: set deb conf selection 2
+  shell: echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+
+- name: installing java 8
+  shell: sudo apt-get -y install oracle-java8-installer 

@@ -1,0 +1,32 @@
+- name: install-ansible - (1/4)
+  shell: sudo apt-get install -y software-properties-common
+
+- name: install-ansible - (2/4)
+  shell: sudo apt-add-repository -y ppa:ansible/ansible
+
+- name: install-ansible - (3/4)
+  shell: sudo apt-get update
+
+- name: install-ansible - (4/4)
+  shell: sudo apt-get install -y ansible
+
+- name: Pause 10s...
+  pause: seconds=10
+
+- name: install-Node.js - (1/5)
+  shell: sudo apt-get install -y python-software-properties
+
+- name: install-Node.js - (2/5)
+  shell: curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+
+- name: install-Node.js - (3/5)
+  shell: sudo apt-get install -y nodejs
+
+- name: install-Node.js - (4/5)
+  shell: sudo apt-get install -y build-essential
+
+- name: copying package.json
+  copy: src=package.json dest=./package.json mode=0777
+
+- name: install-Node.js - (5/5)
+  shell: sudo npm install

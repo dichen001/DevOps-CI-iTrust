@@ -1,0 +1,9 @@
+[Master]
+aws_master_server ansible_host=54.71.97.180 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem
+
+[Slaves]
+aws_slave_server-0 ansible_host=35.166.96.53 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem
+aws_slave_server-1 ansible_host=35.165.120.90 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem
+aws_slave_server-2 ansible_host=52.38.143.93 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem
+aws_slave_server-3 ansible_host=52.89.139.29 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem
+aws_slave_server-4 ansible_host=35.163.167.133 ansible_user=ubuntu ansible_ssh_private_key_file=./DevOps-AWS.pem

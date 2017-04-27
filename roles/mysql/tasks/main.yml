@@ -1,0 +1,18 @@
+
+- name: installing mysql
+  apt: name={{ item }} update_cache=yes cache_valid_time=3600 state=present
+  with_items:
+    - python-mysqldb
+    - mysql-server
+
+- name: installing mysql jdbc driver
+  shell: sudo apt-get -y install libmysql-java
+
+- name: updating my.cnf
+  lineinfile:
+    dest: /etc/mysql/my.cnf
+    insertafter: 'skip-external-locking'
+    line: 'lower_case_table_names=1'
+ 
+- name: restarting mysql service
+  shell: sudo service mysql restart

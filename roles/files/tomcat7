@@ -1,0 +1,19 @@
+#!/bin/sh  
+#tomcat auto-start    
+  
+case $1 in  
+start)  
+ sh /home/ubuntu/tomcat9/bin/startup.sh  
+ ;;  
+stop)  
+ sh /home/ubuntu/tomcat9/bin/shutdown.sh  
+ ;;  
+restart)  
+ sh /home/ubuntu/tomcat9/bin/shutdown.sh  
+ sh /home/ubuntu/tomcat9/bin/startup.sh  
+ ;;  
+*)  
+ echo 'Usage:tomcat7 start|stop|restart'  
+ ;;  
+esac  
+exit 0  

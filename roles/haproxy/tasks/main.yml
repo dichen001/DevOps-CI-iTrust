@@ -1,0 +1,21 @@
+- name: Install haproxy-1.5  ~ I
+  shell: sudo echo deb http://archive.ubuntu.com/ubuntu trusty-backports main universe | tee /etc/apt/sources.list.d/backports.list
+
+- name: apt-get update
+  shell: sudo apt-get update
+    #    sudo su - root -c 'apt-get update'
+
+- name: Install haproxy-1.5  ~ II
+  shell: sudo apt-get install haproxy -t trusty-backports
+
+- name: enable haproxy
+  copy: src=haproxy_default dest=/etc/default/haproxy  mode=0777
+
+- name: backup original haproxy configuration
+  shell: sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.original
+
+- name: copy haproxy configuration
+  copy: src=../../../haproxy.cfg dest=/etc/haproxy/haproxy.cfg  mode=0777
+
+- name: restart haproxy
+  shell: sudo service haproxy restart

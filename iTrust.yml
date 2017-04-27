@@ -1,0 +1,19 @@
+---
+- name: Configure iTrust on Master and Slaves
+  hosts: Master, Slaves
+  become: yes
+  become_method: sudo 
+  roles:
+    - dependencies
+    # - jdk8
+    # - tomcat
+    # - mysql
+
+- name: Configure Jenkins, Ansible and Haproxy on Master 
+  hosts: Master
+  become: yes
+  become_method: sudo 
+  roles:
+    - setup_Jenkins
+    - setup_Ansible
+

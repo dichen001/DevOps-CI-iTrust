@@ -1,0 +1,8 @@
+- name: copy Inventory for Slave Nodes
+  copy: src=Inventory dest=./Inventory mode=0777
+
+- name: copy ssh pem file for Inventory
+  copy: src=../../../DevOps-AWS.pem dest=./DevOps-AWS.pem mode=0600
+
+- name: copy updaing.yml
+  copy: src=updating.yml dest=./updating.yml mode=0777

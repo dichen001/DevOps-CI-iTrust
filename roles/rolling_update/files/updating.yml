@@ -1,0 +1,81 @@
+---
+- hosts: Slaves
+  become: yes
+  serial: 1
+
+  tasks:
+  # - name: start tomcat9
+  #   shell: sudo service tomcat7 start
+  - name: set machine user
+    set_fact:
+      user: 'ubuntu'
+
+  - name: start tomcat
+    service: name=tomcat state=started enabled=yes
+
+  - name: remove origion file
+    command: rm -fr /home/{{user}}/iTrust
+
+
+  - name: Deploy site files from Github repository
+    sudo: yes
+    git: repo=git@github.ncsu.edu:dchen20/iTrust-v23.git dest=/home/{{user}}/iTrust key_file=/{{user}}/.ssh/id_rsa accept_hostkey=yes force=yes
+    register: hello
+
+  - debug: var=hello.stdout_lines
+
+  # - name: cloning the git repo
+  #   command: git clone git@github.ncsu.edu:engr-csc326-staff/iTrust-v23.git
+  #   sudo: no
+
+  # - name: building Maven
+  #   command: mvn package
+  #   args:
+  #     chdir: /home/{{user}}/iTrust/iTrust/
+
+  - name: generate data in tables by skipping tests
+    command: mvn package -DskipTests
+    args:
+      chdir: /home/{{user}}/iTrust/iTrust
+
+  - name: copying war file to tomcat webapps folder
+    command: mv /home/{{user}}/iTrust/iTrust/target/iTrust-23.0.0.war /opt/apache-tomcat-9.0.0.M15/webapps/iTrust.war
+
+  - name: chmod iTrust.war
+    shell: sudo chmod 777 /opt/apache-tomcat-9.0.0.M15/webapps/iTrust.war
+  #
+  # - name: create cobertura report
+  #   shell: mvn cobertura:cobertura -Dcobertura.report.format=xml
+
+  # - name: generate data in tables by skipping tests
+  #   command: mvn package -DskipTests
+  #   args:
+  #     chdir: /home/{{user}}/iTrust/iTrust
+
+
+
+
+  # - name: clone git repo
+  #   git: repo=https://github.com/katetan1234/iTrust1.git dest=/home/ubuntu/iTrust1 version=master clone=yes
+  #
+  # # - name: change file
+  # #   copy: src=../../files/context.xml dest=/home/ubuntu/iTrust-v23/WebRoot/META-INF
+  #
+  # - name: running maven
+  #   command: chdir=/home/ubuntu/iTrust1/ mvn clean package
+  #
+  # - name: copy jar
+  #   command: mv /home/ubuntu/iTrust1/target/iTrust-23.0.0.war /home/ubuntu/tomcat9/webapps/iTrust.war
+
+  - name: restart tomcat
+    service: name=tomcat state=started enabled=yes
+
+  - name: wait for tomcat to start
+    wait_for: port=8080 timeout=60
+
+  # - name: check iTrust deploy secussful
+  #   uri: url="http://{{ url }}:8080/iTrust" status_code=200
+  #   register: result
+  #   until: result.status == 200
+  #   retries: 60
+  #   delay: 1

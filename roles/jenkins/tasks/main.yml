@@ -1,0 +1,144 @@
+---
+  - name: Install add-apt-repostory
+    apt: name=software-properties-common state=latest
+
+  - name: Add Oracle Java Repository
+    apt_repository: repo='ppa:webupd8team/java'
+
+  - name: Accept Java 8 License
+    debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+  - name: Install Oracle Java 8
+    apt: name={{item}} state=latest
+    with_items:
+     - oracle-java8-installer
+
+  - name: install git
+    apt: name=git state=latest
+
+  - name: update
+    apt: name=software-properties-common state=latest
+
+  - name: add maven package
+    apt_repository:
+      repo: 'ppa:andrei-pozolotin/maven3'
+  - name: update maven
+    apt: name=software-properties-common state=latest
+
+  - name: install maven
+    apt: name=maven state=latest
+
+  - name: add apt-key
+    apt_key:
+       url: https://pkg.jenkins.io/debian/jenkins-ci.org.key
+       state: present
+
+  - name: add jenkins package
+    apt_repository:
+       repo: deb http://pkg.jenkins.io/debian-stable binary/
+       state: present
+
+  - name: install jenkins
+    apt: name=jenkins state=present
+
+  - name: change default file
+    copy: src=../files/jenkins dest=/etc/default
+
+  - name: stop jenkins
+    shell: service jenkins stop
+
+  - name: delete
+    shell: rm -f /var/lib/jenkins/config.xml
+
+  - name: copy xml file
+    copy: src=../files/config.xml dest=/var/lib/jenkins/
+
+  - name: Restart Jenkins2
+    shell: service jenkins start
+
+  - name: copy xml file
+    copy: src=../files/JSPDemo1.xml dest=/var/lib/jenkins/
+
+  - name: copy maven file
+    copy: src=../files/hudson.tasks.Maven.xml dest=/var/lib/jenkins/
+
+  - name: Ensure jenkins Running
+    service: name=jenkins state=started
+
+  # - name: Ensure Jenkins Is Available
+  #   wait_for: port=6060 delay=5
+
+  - name: wait for Jenkins to start
+    wait_for: port=6060 timeout=60
+
+  - name: download CLI
+    sudo: yes
+    get_url:
+       url: http://localhost:6060/jnlpJars/jenkins-cli.jar
+       dest: /var/lib/jenkins/
+
+  - name: Ensure Jenkins Update Directory Exists
+    file: path=/var/lib/jenkins/updates state=directory
+        owner=jenkins group=jenkins
+
+  - name: Ensure Jenkins Update Center Synced
+    shell: wget http://updates.jenkins-ci.org/update-center.json -qO- | sed '1d;$d' > /var/lib/jenkins/updates/default.json
+
+  - name: Ensure Jenkins Update Center Data Permissions
+    file: path=/var/lib/jenkins/updates/default.json state=file
+        owner=jenkins group=jenkins mode=644
+
+  - name: Restart Jenkins
+    service: name=jenkins state=restarted
+
+  - name: wait for Jenkins to start
+    wait_for: port=6060 timeout=60
+
+
+  - name: Install Plugin - github
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin github
+
+  - name: Install Plugin - maven-plugin
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin maven-plugin
+
+  - name: Install Plugin - config-file-provider
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin config-file-provider
+
+  - name: Install Plugin - pipeline-maven
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin pipeline-maven
+
+  - name: Install Plugin - jacoco
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin jacoco
+
+  - name: Install Plugin - junit
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin junit
+
+  - name: Install Plugin - test-stability
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin test-stability
+
+  - name: Install Plugin - xunit
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin xunit
+
+  - name: Install Plugin - test-results-analyzer
+    shell: java -jar /var/lib/jenkins/jenkins-cli.jar  -s http://localhost:6060 install-plugin test-results-analyzer
+
+  # - name: Install plugin
+  #   jenkins_plugin: name={{item}}
+  #   with_items:
+  #       - github
+  #       - maven-plugin
+  #       - config-file-provider
+  #       - pipeline-maven
+  #       - deploy-to-container
+  #       - jacoco
+  #       - junit
+  #       - junit-attachments
+  #       - test-stability
+  #       - xunit
+  #       - test-results-analyzer
+
+  - name: restart jenkins
+    shell: service jenkins restart
+
+  - name: wait for Jenkins to start
+    wait_for: port=6060 timeout=60

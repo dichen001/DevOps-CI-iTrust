@@ -1,0 +1,176 @@
+---
+  - name: add java repository
+    shell: sudo su - root -c 'add-apt-repository -y ppa:webupd8team/java'
+
+  - name: apt-get update
+    shell: sudo su - root -c 'apt-get update'
+
+  - name: set deb conf selection 1
+    shell: echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
+
+  - name: set deb conf selection 2
+    shell: echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+
+  - name: installing java 8
+    shell: sudo apt-get -y install oracle-java8-installer
+
+
+
+  - name: add group "tomcat"
+    group: name=tomcat
+
+  - name: add user "tomcat"
+    user: name=tomcat group=tomcat home=/usr/share/tomcat createhome=no
+
+  - name: download tomcat
+    get_url: url=http://archive.apache.org/dist/tomcat/tomcat-9/v9.0.0.M15/bin/apache-tomcat-9.0.0.M15.tar.gz dest=/opt/apache-tomcat-9.0.0.M15.tar.gz
+
+  - name: extract archive
+    command: chdir=/usr/share /bin/tar xvf /opt/apache-tomcat-9.0.0.M15.tar.gz -C /opt/ creates=/opt/apache-tomcat-9.0.0.M15
+
+  - name: symlink install directory
+    file: src=/opt/apache-tomcat-9.0.0.M15 path=/usr/share/tomcat state=link
+
+  - name: change ownership of tomcat installation
+    file: path=/usr/share/tomcat/ owner=tomcat group=tomcat state=directory recurse=yes
+
+  - name: install tomcat init script
+    copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
+
+  - name: start tomcat
+    service: name=tomcat state=started enabled=yes
+
+  - name: wait for tomcat to start
+    wait_for: port=8080
+
+
+
+
+  - name: installing mysql
+    apt: name={{ item }} update_cache=yes cache_valid_time=3600 state=present
+    with_items:
+      - python-mysqldb
+      - mysql-server
+
+  - name: installing mysql jdbc driver
+    shell: sudo apt-get -y install libmysql-java
+
+  - name: updating my.cnf
+    lineinfile:
+      dest: /etc/mysql/my.cnf
+      insertafter: 'skip-external-locking'
+      line: 'lower_case_table_names=1'
+
+  - name: restarting mysql service
+    shell: sudo service mysql restart
+
+
+
+  #
+  #
+  # - name: Install add-apt-repostory
+  #   apt: name=software-properties-common state=latest
+  #
+  # - name: Add Oracle Java Repository
+  #   apt_repository: repo='ppa:webupd8team/java'
+  #
+  # - name: Accept Java 8 License
+  #   debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+  #
+  # - name: Install Oracle Java 8
+  #   apt: name={{item}} state=latest
+  #   with_items:
+  #    - oracle-java8-installer
+  #
+  # - name: install git
+  #   apt: name=git state=latest
+  #
+  # - name: get maven
+  #   become: true
+  #   apt:
+  #    pkg: maven
+  #    state: present
+  #
+  # - name: get pip
+  #   apt:
+  #    pkg: python-pip
+  #    state: present
+  #
+  # - name: Install MySQL
+  #   apt: name={{ item }} cache_valid_time=3600 state=present
+  #   sudo: yes
+  #   with_items:
+  #   - python-mysqldb
+  #   - mysql-server
+  #
+  # - name: Start the MySQL service
+  #   sudo: yes
+  #   service:
+  #     name: mysql
+  #     state: started
+  #     enabled: true
+  #
+  # - name: update mysql root password for all root accounts
+  #   sudo: yes
+  #   mysql_user:
+  #     name: root
+  #     host: "{{ item }}"
+  #     password: "{{ mysql_root_password }}"
+  #     login_user: root
+  #     login_password: "{{ mysql_root_password }}"
+  #     check_implicit_admin: yes
+  #     priv: "*.*:ALL,GRANT"
+  #   with_items:
+  #     - "{{ ansible_hostname }}"
+  #     - 127.0.0.1
+  #     - ::1
+  #     - localhost
+  #
+  # - name: downlad tomcat9
+  #   sudo: no
+  #   get_url:
+  #     url: http://www.us.apache.org/dist/tomcat/tomcat-9/v9.0.0.M18/bin/apache-tomcat-9.0.0.M18.tar.gz
+  #     dest: /home/ubuntu
+  #
+  # - name: unzip tomcat9
+  #   sudo: no
+  #   command: chdir=/home/ubuntu tar -xzf apache-tomcat-9.0.0.M18.tar.gz
+  #
+  #
+  # - name: move tomcat9
+  #   sudo : no
+  #   shell: chdir=/home/ubuntu/ mv apache-tomcat-9.0.0.M18 tomcat9
+  #
+  # - name: copy JAVA_HOME
+  #   shell: echo "export JAVA_HOME="/usr/lib/jvm/java-8-oracle"" >> /etc/environment
+  # - name: copy JRE_HOME
+  #   shell: echo "export JRE_HOME="/usr/lib/jvm/java-8-oracle/jre"" >> /etc/environment
+  #
+  # - name: source bashrc
+  #   sudo: no
+  #   shell: .  /home/ubuntu/.bashrc && export JAVA_HOME="/usr/lib/jvm/java-8-oracle" && export JRE_HOME="/usr/lib/jvm/java-8-oracle/jre"
+  #
+  # - name: source bashrc
+  #   sudo: no
+  #   shell: .  /home/ubuntu/.bashrc && ls
+  #
+  # - name: copy
+  #   copy: src=../../files/tomcat7 dest=/etc/init.d
+  #
+  # - name: execute service
+  #   shell: chmod +x /etc/init.d/tomcat7
+  #
+  # - name: add service
+  #   shell: update-rc.d tomcat7 defaults
+  #
+  # - name: start tomcat9
+  #   shell: sudo service tomcat7 start
+  #
+  # - name: set mysql environment
+  #   copy: src=../../files/my.cnf dest=/etc/mysql/
+  #
+  # - name: restart MySQL
+  #   become: true
+  #   command: /etc/init.d/mysql restart
+  #
+  #

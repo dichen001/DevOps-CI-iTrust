@@ -1,0 +1,54 @@
+- name: set machine user
+  set_fact:
+    user: 'ubuntu'
+
+- name: installing maven and git
+  apt: name={{item}} state=installed update_cache=true
+  with_items:
+    - maven
+    - git
+
+- name: changing owership of ssh_config
+  command: chmod 777 /etc/ssh/ssh_config
+
+- name: updating ssh_config
+  lineinfile:
+    dest: /etc/ssh/ssh_config
+    insertafter: 'GSSAPIDelegateCredentials no'
+    line: '    StrictHostKeyChecking no'
+
+- name: Creates .ssh directory for root
+  sudo: yes
+  file: path=/{{user}}/.ssh state=directory
+
+# This public key is set on Github repo Settings under "Deploy keys"
+- name: Upload the private key used for Github cloning
+  sudo: yes
+  copy: src=~/.ssh/ncsu_id_rsa dest=/{{user}}/.ssh/id_rsa mode=0600
+
+- name: Deploy site files from Github repository
+  sudo: yes
+  git: repo=git@github.ncsu.edu:dchen20/iTrust-v23.git dest=/home/{{user}}/iTrust key_file=/{{user}}/.ssh/id_rsa accept_hostkey=yes force=yes
+  register: hello
+
+- debug: var=hello.stdout_lines
+
+# - name: cloning the git repo
+#   command: git clone git@github.ncsu.edu:engr-csc326-staff/iTrust-v23.git
+#   sudo: no
+
+- name: building Maven
+  command: mvn package
+  args:
+    chdir: /home/{{user}}/iTrust/iTrust/
+
+- name: renaming war file
+  command: mv /home/{{user}}/iTrust/iTrust/target/iTrust-23.0.0.war /home/{{user}}/iTrust/iTrust/target/iTrust.war
+
+- name: copying war file to tomcat webapps folder
+  command: cp /home/{{user}}/iTrust/iTrust/target/iTrust.war /opt/apache-tomcat-9.0.0.M15/webapps
+
+- name: generate data in tables by skipping tests
+  command: mvn package -DskipTests
+  args:
+    chdir: /home/{{user}}/iTrust/iTrust
